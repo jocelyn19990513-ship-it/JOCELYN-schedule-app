@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>我的日程清单 · Project 50</title>
+
+    <!-- APP 图标 & PWA 关键文件 -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="app-icon-v2.png">
+
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 16px 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+            "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: #f5f5f7;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            color: #111827;
+        }
+        .app {
+            width: 95%;
+            max-width: 540px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 18px 35px rgba(15, 23, 42, 0.12);
+            padding: 18px 18px 20px;
+        }
+        .app-header {
+            padding: 4px 2px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 10px;
+        }
+        .app-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 20px;
+            margin: 0;
+        }
+        .app-title span.emoji { font-size: 20px; }
+        .app-subtitle {
+            margin-top: 4px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        /* tabs */
+        .tab-header {
+            margin-top: 10px;
+            margin-bottom: 12px;
+            padding: 3px;
+            background: #f3f4f6;
+            border-radius: 999px;
+            display: flex;
+            gap: 4px;
+        }
+        .tab-btn {
+    flex: 1;
+    padding: 6px 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.tab-btn.active {
+    background: transparent;
+    box-shadow: none;
+}
+
+/* 小圆图标 */
+.tab-icon-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: #fee2f2;
+    color: #ec4899;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    box-shadow: 0 1px 3px rgba(148, 163, 184, 0.6);
+}
+.tab-btn.active .tab-icon-badge {
+    background: linear-gradient(135deg, #fb7185, #a855f7);
+    color: #ffffff;
+    box-shadow: 0 3px 6px rgba(236, 72, 153, 0.6);
+}
+
+        .tab-section { display: none; }
+        .tab-section.active { display: block; }
+
+        h2.section-title { font-size: 16px; margin: 0 0 4px; }
+        .section-desc { font-size: 12px; color: #6b7280; margin-bottom: 10px; }
+
+        /* 通用输入样式 */
+        input[type="text"],
+        input[type="date"],
+        input[type="number"],
+        input[type="month"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            font-size: 14px;
+            outline: none;
+            background: #f9fafb;
+        }
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #ec4899;
+            box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.15);
+            background: #ffffff;
+        }
+        button { font-family: inherit; }
+        .primary-btn {
+            border: none;
+            border-radius: 999px;
+            padding: 8px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #ec4899, #a855f7);
+            color: #ffffff;
+            white-space: nowrap;
+        }
+        .primary-btn:active { transform: scale(0.97); }
+        .small-btn { border-radius: 999px; padding: 4px 10px; font-size: 11px; }
+        .badge-soft {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+        .row-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .hint { font-size: 11px; color: #9ca3af; }
+
+        /* 卡片 */
+        .card {
+            border-radius: 14px;
+            padding: 10px 10px 12px;
+            background: #f9fafb;
+            box-shadow: inset 0 0 0 1px #e5e7eb;
+            margin-bottom: 10px;
+        }
+
+        /* Project 50 */
+        .p50-date-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .p50-date-row input[type="date"] { flex: 1; }
+        .p50-rules {
+            border-radius: 12px;
+            background: #ffffff;
+            padding: 6px 8px;
+            max-height: 220px;
+            overflow-y: auto;
+            box-shadow: 0 1px 3px rgba(148, 163, 184, 0.25);
+        }
+        .p50-rule-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .p50-rule-item:last-child { border-bottom: none; }
+        .p50-rule-label { font-size: 13px; }
+        .p50-summary { font-size: 13px; color: #4b5563; margin-top: 6px; }
+        .p50-note textarea {
+            min-height: 70px;
+            resize: vertical;
+            font-size: 13px;
+        }
+
+        /* To-Do */
+        .todo-top-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .todo-top-row input[type="text"] { flex: 2; }
+        .todo-top-row select { flex: 1.3; }
+        .todo-second-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .todo-second-row input[type="date"] { flex: 1; }
+        .todo-list {
+            list-style: none;
+            padding: 0;
+            margin: 6px 0 0;
+            max-height: 210px;
+            overflow-y: auto;
+        }
+        .todo-empty {
+            font-size: 13px;
+            color: #9ca3af;
+            text-align: center;
+            margin-top: 8px;
+        }
+        .todo-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 7px 2px;
+            border-bottom: 1px solid #e5e7eb;
+            gap: 6px;
+        }
+        .todo-main { flex: 1; min-width: 0; }
+        .todo-title { font-size: 14px; word-break: break-word; }
+        .todo-title.done { text-decoration: line-through; color: #9ca3af; }
+        .todo-meta {
+            margin-top: 2px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
+        }
+        .todo-meta-text { font-size: 11px; color: #6b7280; }
+        .badge-category {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            background: #fee2ff;
+            color: #db2777;
+        }
+        .todo-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-end;
+        }
+        .focus-btn {
+            border: none;
+            cursor: pointer;
+            background: #ec4899;
+            color: #fff;
+        }
+        .focus-btn.stop { background: #a855f7; }
+        .delete-btn {
+            border: none;
+            cursor: pointer;
+            background: #ef4444;
+            color: #fff;
+        }
+        .done-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: #4b5563;
+        }
+
+        /* 日历通用 */
+        .calendar-wrapper {
+            margin-top: 10px;
+            border-radius: 14px;
+            background: #f9fafb;
+            padding: 8px;
+            box-shadow: inset 0 0 0 1px #e5e7eb;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .calendar-title { font-size: 13px; color: #4b5563; }
+        .cal-nav {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .cal-nav-btn {
+            border: none;
+            border-radius: 999px;
+            padding: 2px 7px;
+            font-size: 12px;
+            cursor: pointer;
+            background: #e5e7eb;
+            color: #374151;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            font-size: 11px;
+        }
+        .cal-cell {
+            min-height: 32px;
+            border-radius: 7px;
+            padding: 2px 3px;
+            text-align: center;
+            background: #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        .cal-weekday {
+            font-weight: 600;
+            background: transparent;
+            color: #6b7280;
+        }
+        .cal-empty { background: transparent; }
+        .cal-day-num { font-size: 11px; }
+
+        /* Project50 用的色块深浅等级 */
+        .cal-level-0 { background: #e5e7eb; color: #4b5563; }
+        .cal-level-1 { background: #f5f3ff; color: #5b21b6; }
+        .cal-level-2 { background: #e0e7ff; color: #4338ca; }
+        .cal-level-3 { background: #c7d2fe; color: #3730a3; }
+        .cal-level-4 { background: #a855f7; color: #f9fafb; }
+
+        /* To-Do 日历中的类别色块 */
+        .focus-cat-row {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            margin-top: 2px;
+            gap: 2px;
+        }
+        .focus-cat-dot {
+            height: 4px;
+            border-radius: 999px;
+            width: 100%;
+        }
+        .focus-cat-dot-学习 { background: #a855f7; }
+        .focus-cat-dot-工作 { background: #3b82f6; }
+        .focus-cat-dot-家庭 { background: #ec4899; }
+        .focus-cat-dot-生活 { background: #f97316; }
+        .focus-cat-dot-娱乐 { background: #22c55e; }
+        .focus-cat-dot-其他 { background: #6b7280; }
+
+        /* 专注时间饼图按钮 */
+        .focus-range-row {
+            display: flex;
+            gap: 6px;
+            margin: 4px 0 8px;
+        }
+        .focus-range-btn {
+            flex: 1;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            font-size: 11px;
+            padding: 4px 6px;
+            cursor: pointer;
+            color: #4b5563;
+        }
+        .focus-range-btn.active {
+            border-color: #ec4899;
+            background: #fdf2f8;
+            color: #be185d;
+            font-weight: 600;
+        }
+
+        /* 体重记录相关 */
+        .weight-input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .weight-input-row input[type="date"] { flex: 1.2; }
+        .weight-input-row input[type="number"] { flex: 1; }
+        .weight-list {
+            margin-top: 6px;
+            max-height: 140px;
+            overflow-y: auto;
+            font-size: 13px;
+            color: #4b5563;
+        }
+        .weight-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 2px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .weight-empty {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-top: 6px;
+            text-align: center;
+        }
+        .weight-chart-container { margin-top: 8px; }
+        .weight-chart-container canvas {
+            width: 100%;
+            max-height: 220px;
+        }
+        .weight-month-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        /* 每日重要事项 */
+        .important-input-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .important-input-row > * {
+            flex: 1;
+            min-width: 0;
+        }
+        .important-type-badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 999px;
+            font-size: 10px;
+            margin-right: 4px;
+            margin-bottom: 2px;
+            color: #fff;
+        }
+        .imp-type-普通 { background: #f97373; }
+        .imp-type-姨妈期 { background: #ec4899; }
+        .imp-type-房租日 { background: #8b5cf6; }
+        .imp-type-生日 { background: #facc15; color:#78350f; }
+        .imp-type-纪念日 { background: #14b8a6; }
+        .imp-type-其他 { background: #6b7280; }
+
+        .imp-pill {
+            font-size: 9px;
+            padding: 1px 4px;
+            border-radius: 999px;
+            color: #fff;
+            max-width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 1px;
+        }
+
+        .important-list {
+            margin-top: 6px;
+            max-height: 140px;
+            overflow-y: auto;
+            font-size: 12px;
+            color: #4b5563;
+        }
+        .important-item {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 4px 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        @media (max-width: 400px) {
+            .todo-top-row,
+            .todo-second-row,
+            .p50-date-row,
+            .weight-input-row,
+            .weight-month-row,
+            .focus-range-row,
+            .important-input-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header class="app-header">
+        <h1 class="app-title">
+            <span class="emoji">📒</span>
+            <span>我的日程清单</span>
+        </h1>
+        <div class="app-subtitle">
+            Project 50 打卡 · To-Do 专注 · 重要事项 · 体重记录（数据仅保存在本地）
+        </div>
+    </header>
+
+    <!-- 顶部 tab：使用图标 -->
+   <div class="tab-header">
+    <button class="tab-btn active" data-target="tab-project50" title="Project 50 打卡">
+        <span class="tab-icon-badge">📈</span>
+    </button>
+    <button class="tab-btn" data-target="tab-todo" title="To-Do & 专注">
+        <span class="tab-icon-badge">📋</span>
+    </button>
+    <button class="tab-btn" data-target="tab-important" title="每日重要事项">
+        <span class="tab-icon-badge">📆</span>
+    </button>
+    <button class="tab-btn" data-target="tab-weight" title="体重记录">
+        <span class="tab-icon-badge">🐻</span>
+    </button>
+    <button class="tab-btn" data-target="tab-about" title="使用说明">
+        <span class="tab-icon-badge">🌸</span>
+    </button>
+</div>
+
+    <!-- Project 50 模块 -->
+    <section id="tab-project50" class="tab-section active">
+        <div class="card">
+            <h2 class="section-title">每日 Challenge</h2>
+            <div class="section-desc">
+                根据 Project 50（easy 模式）打卡，7 条固定规则，每天复盘自己的执行。
+            </div>
+
+            <div class="p50-date-row">
+                <input type="date" id="p50-date" />
+                <button class="small-btn primary-btn" id="p50-today-btn">跳到今天</button>
+            </div>
+
+            <div class="p50-rules" id="p50-rules"></div>
+            <div class="p50-summary" id="p50-summary"></div>
+        </div>
+
+        <div class="card p50-note">
+            <div class="row-between">
+                <span class="hint">记录今天的挑战行程 / 感受 / 复盘：</span>
+                <span class="badge-soft">仅本地可见</span>
+            </div>
+            <textarea id="p50-note-input" placeholder="例如：7:30 起床，锻炼 30 分钟，阅读 6 页……"></textarea>
+        </div>
+
+        <!-- Project50 日历汇总 -->
+        <div class="calendar-wrapper">
+            <div class="calendar-header">
+                <div class="calendar-title" id="p50-calendar-title">Project 50 完成情况</div>
+                <div class="cal-nav">
+                    <button class="cal-nav-btn" id="p50-cal-prev">‹</button>
+                    <button class="cal-nav-btn" id="p50-cal-next">›</button>
+                </div>
+            </div>
+            <div class="hint">色块深浅表示当天完成规则数量，越深完成越多。</div>
+            <div class="calendar-grid" id="p50-calendar-grid"></div>
+        </div>
+    </section>
+
+    <!-- To-Do 模块 -->
+    <section id="tab-todo" class="tab-section">
+        <div class="card">
+            <h2 class="section-title">待办事项 & 专注记录</h2>
+            <div class="section-desc">
+                为每天创建待办，按类别管理。点击“开始专注 / 结束专注”记录真实专注时间。
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="todo-top-row">
+                <input type="text" id="todo-title" placeholder="要做什么？例如：阅读《XXX》5 页" />
+                <select id="todo-category">
+                    <option value="学习">学习</option>
+                    <option value="工作">工作</option>
+                    <option value="家庭">家庭</option>
+                    <option value="生活">生活</option>
+                    <option value="娱乐">娱乐</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+            <div class="todo-second-row">
+                <input type="date" id="todo-date" />
+                <button class="primary-btn" id="todo-add-btn" onclick="addTodoTask()">添加待办</button>
+            </div>
+            <div class="hint">
+                为不同日期添加待办；开始 / 结束专注会累计该任务的专注分钟数。
+            </div>
+
+            <!-- 列表区域 -->
+            <ul class="todo-list" id="todo-list"></ul>
+            <div class="todo-empty" id="todo-empty">这天还没有待办，可以先添加一条～</div>
+        </div>
+
+        <!-- 专注日历（按类别色块显示） -->
+        <div class="calendar-wrapper">
+            <div class="calendar-header">
+                <div class="calendar-title" id="focus-calendar-title">专注类别日历</div>
+                <div class="cal-nav">
+                    <button class="cal-nav-btn" id="focus-cal-prev">‹</button>
+                    <button class="cal-nav-btn" id="focus-cal-next">›</button>
+                </div>
+            </div>
+            <div class="hint">
+    每天的色条表示当天有专注的任务类型；点击某一天，可以在上方看到这天的任务列表。
+</div>
+
+            <div class="calendar-grid" id="focus-calendar-grid"></div>
+        </div>
+
+        <!-- 专注时间统计饼图 -->
+        <div class="card">
+            <h2 class="section-title">专注时间统计</h2>
+            <div class="section-desc">
+                统计不同类别在最近一周 / 本月 / 本年的专注时间占比（基于专注分钟数）。
+            </div>
+            <div class="focus-range-row">
+                <button class="focus-range-btn active" data-range="week">最近一周</button>
+                <button class="focus-range-btn" data-range="month">本月</button>
+                <button class="focus-range-btn" data-range="year">本年</button>
+            </div>
+            <div class="weight-chart-container">
+                <canvas id="focus-pie-chart"></canvas>
+            </div>
+            <div class="hint" style="margin-top:6px;">
+                建议：把真正专注过的任务才点击“开始 / 结束专注”，数据会更有意义。
+            </div>
+        </div>
+    </section>
+
+    <!-- 每日重要事项模块 -->
+    <section id="tab-important" class="tab-section">
+        <div class="card">
+            <h2 class="section-title">每日重要事项</h2>
+            <div class="section-desc">
+                为每天添加重要事件，也可以设置固定事件（每月房租日、姨妈期、生日、纪念日等），不同类型用不同颜色显示。
+            </div>
+
+            <div class="important-input-row">
+                <input type="date" id="important-date" />
+                <input type="text" id="important-title" placeholder="事件内容，例如：交房租 / 老公生日" />
+            </div>
+            <div class="important-input-row">
+                <select id="important-type">
+                    <option value="普通">普通重要事项</option>
+                    <option value="姨妈期">姨妈期</option>
+                    <option value="房租日">房租日</option>
+                    <option value="生日">生日</option>
+                    <option value="纪念日">纪念日</option>
+                    <option value="其他">其他</option>
+                </select>
+                <select id="important-repeat">
+                    <option value="none">不重复</option>
+                    <option value="monthly">每月重复</option>
+                    <option value="yearly">每年重复</option>
+                </select>
+                <input type="number" id="important-duration" min="1" max="10" placeholder="持续天数(可选)" />
+            </div>
+            <button class="primary-btn" id="important-add-btn">添加重要事项</button>
+            <div class="hint" style="margin-top:6px;">
+                例子：姨妈期可选择“姨妈期 + 每月重复 + 持续 5 天”；生日、纪念日可选“每年重复”。
+            </div>
+
+            <div class="important-list" id="important-list"></div>
+        </div>
+
+        <div class="calendar-wrapper">
+            <div class="calendar-header">
+                <div class="calendar-title" id="important-calendar-title">重要事项日历</div>
+                <div class="cal-nav">
+                    <button class="cal-nav-btn" id="important-cal-prev">‹</button>
+                    <button class="cal-nav-btn" id="important-cal-next">›</button>
+                </div>
+            </div>
+            <div class="hint">
+                每个日期下方会显示彩色小胶囊：不同类型不同颜色，标题会自动截断成小标签。
+            </div>
+            <div class="calendar-grid" id="important-calendar-grid"></div>
+        </div>
+    </section>
+
+    <!-- 体重记录模块 -->
+    <section id="tab-weight" class="tab-section">
+        <div class="card">
+            <h2 class="section-title">体重记录</h2>
+            <div class="section-desc">
+                记录每天的体重变化，并按月份查看折线图走势。数值只保存在本地浏览器。
+            </div>
+
+            <div class="weight-input-row">
+                <input type="date" id="weight-date" />
+                <input type="number" id="weight-value" step="0.1" placeholder="体重（kg）" />
+            </div>
+            <button class="primary-btn" id="weight-add-btn">添加记录</button>
+            <div class="hint" style="margin-top:6px;">
+                建议每天同一时间称重，比如早上起床后空腹，记录更稳定。
+            </div>
+
+            <div class="weight-list" id="weight-list"></div>
+            <div class="weight-empty" id="weight-empty">还没有体重记录，先添加一条吧～</div>
+        </div>
+
+        <div class="card">
+            <div class="weight-month-row">
+                <span class="hint">选择要查看的月份：</span>
+                <input type="month" id="weight-month" />
+            </div>
+            <div class="weight-chart-container">
+                <canvas id="weight-chart"></canvas>
+            </div>
+            <div class="hint" style="margin-top:6px;">
+                折线图会显示该月每天最后一次记录的体重，方便看趋势，不要被单日波动吓到～
+            </div>
+        </div>
+    </section>
+
+    <!-- 使用说明模块 -->
+    <section id="tab-about" class="tab-section">
+        <div class="card">
+            <h2 class="section-title">使用说明 ✨</h2>
+            <div class="section-desc">
+                这是一个个人效率工具。支持 Project 50 打卡、每日待办专注记录、重要事项日历、体重折线图。  
+                所有数据都保存在你自己的设备浏览器中，不会共享，也不会上传服务器。
+            </div>
+
+            <!-- 版本号 + 刷新按钮 -->
+            <div class="row-between" style="margin: 6px 0 14px; align-items:center;">
+                <p class="hint" style="margin:0; color:#ec4899;">
+                    ⭐ 版本号 v1.0.2
+                </p>
+                <button class="small-btn" id="app-reload-btn"
+                        style="border:none; background:#fdf2f8; color:#be185d;">
+                    刷新到最新版本
+                </button>
+            </div>
+
+            <h3 class="section-title">✨ 数据隐私</h3>
+            <p class="hint">
+                ⭐ 所有数据仅保存在本地（localStorage）<br>
+                ⭐ 你看不到别人的数据，别人也看不到你的<br>
+                ⭐ 多人使用同一网址，数据仍然是 100% 独立<br>
+                ⭐ 除非手动清除浏览器数据，否则记录不会丢失
+            </p>
+
+            <h3 class="section-title" style="margin-top:12px;">✨ 如何添加到手机主屏幕？</h3>
+            <p class="hint">
+                <strong>📱 iPhone（Safari）：</strong><br>
+                ⭐ 用 Safari 打开网页<br>
+                ⭐ 点击底部“分享”图标<br>
+                ⭐ 选择“添加到主屏幕”<br>
+                ⭐ 会出现在主屏幕，像真正 App 一样打开
+            </p>
+            <p class="hint">
+                <strong>🤖 安卓（Chrome）：</strong><br>
+                ⭐ Chrome 打开网页<br>
+                ⭐ 右上角菜单「⋮」<br>
+                ⭐ 选择“添加到主屏幕”或“安装应用”<br>
+                ⭐ 添加后即可像 App 一样使用
+            </p>
+
+            <h3 class="section-title" style="margin-top:12px;">✨ 如何分享给朋友？</h3>
+            <p class="hint">
+                ⭐ 直接把浏览器地址栏的链接复制发给朋友<br>
+                ⭐ 他们打开后看到的是全新的空白页面<br>
+                ⭐ 彼此的数据完全不会混合
+            </p>
+
+            <h3 class="section-title" style="margin-top:12px;">✨ 数据会不会丢失？</h3>
+            <p class="hint">
+                ⭐ 正常更新界面不会影响原来的数据<br>
+                ⭐ 保证网址不变、存储键名不变，数据就不丢<br>
+                ⭐ 若清除浏览器历史记录 / 网站数据，则会丢失<br>
+                ⭐ 建议每隔一段时间截图或导出数据作为备份
+            </p>
+
+            <h3 class="section-title" style="margin-top:12px;">✨ 更新计划（可选）</h3>
+            <p class="hint">
+                ⭐ v1.1（计划）增加导出 / 导入数据<br>
+                ⭐ v1.2 增加主题色（粉色 / 紫色 / 可爱风）<br>
+                ⭐ v1.3 增加倒计时 / 番茄钟模式<br>
+                ⭐ v2.0 支持云同步与多设备共享（需要你授权才会启用）
+            </p>
+
+            <!-- 个人签名 -->
+            <div style="text-align:center; margin-top:18px; margin-bottom:6px;">
+                <span style="font-size:12px; color:#ec4899;">
+                    ✨ Designed by <strong>Jiayu Hou</strong> ✨
+                </span>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Chart.js（如需兼容国内安卓，可以换成本地文件） -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    /* 工具：获取今天 yyyy-mm-dd */
+    function getTodayStr() {
+        const d = new Date();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return d.getFullYear() + "-" + m + "-" + day;
+    }
+    /* 工具：获取当前 yyyy-MM */
+    function getTodayMonthStr() {
+        const d = new Date();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        return d.getFullYear() + "-" + m;
+    }
+    /* 工具：按月偏移 */
+    function shiftMonth(date, delta) {
+        return new Date(date.getFullYear(), date.getMonth() + delta, 1);
+    }
+
+    /* Tab 切换 */
+    (function initTabs() {
+        const tabButtons = document.querySelectorAll(".tab-btn");
+        const sections = document.querySelectorAll(".tab-section");
+        tabButtons.forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const targetId = btn.dataset.target;
+                tabButtons.forEach((b) => b.classList.remove("active"));
+                sections.forEach((sec) => sec.classList.remove("active"));
+                btn.classList.add("active");
+                document.getElementById(targetId).classList.add("active");
+            });
+        });
+    })();
+
+    /* -------------------- Project 50 -------------------- */
+    const P50_RULES = [
+        { id: "wake", text: "早上 8 点前起床" },
+        { id: "read", text: "每天阅读书籍至少 5 页" },
+        { id: "exercise", text: "每天锻炼至少 30 分钟" },
+        { id: "nosoda", text: "不喝碳酸饮料" },
+        { id: "morning_routine", text: "完成晨起行程（不玩手机，但可以放音乐）" },
+        { id: "plan_day", text: "记录今天的挑战行程（写计划）" },
+        { id: "reflect", text: "简单复盘：今天有没有比昨天更好一点？" }
+    ];
+    const P50_STORAGE_KEY = "project50_data_v1";
+    let p50Data = {};
+
+    const p50DateInput = document.getElementById("p50-date");
+    const p50TodayBtn = document.getElementById("p50-today-btn");
+    const p50RulesEl = document.getElementById("p50-rules");
+    const p50SummaryEl = document.getElementById("p50-summary");
+    const p50NoteInput = document.getElementById("p50-note-input");
+    const p50CalendarTitleEl = document.getElementById("p50-calendar-title");
+    const p50CalendarGridEl = document.getElementById("p50-calendar-grid");
+    const p50CalPrevBtn = document.getElementById("p50-cal-prev");
+    const p50CalNextBtn = document.getElementById("p50-cal-next");
+    let p50CalMonth;
+
+    function loadP50Data() {
+        const raw = localStorage.getItem(P50_STORAGE_KEY);
+        if (raw) {
+            try { p50Data = JSON.parse(raw) || {}; }
+            catch { p50Data = {}; }
+        }
+    }
+    function saveP50Data() {
+        localStorage.setItem(P50_STORAGE_KEY, JSON.stringify(p50Data));
+    }
+    function getP50DayData(dateStr) {
+        if (!p50Data[dateStr]) {
+            p50Data[dateStr] = { rules: {}, note: "" };
+        }
+        return p50Data[dateStr];
+    }
+    function renderP50Day() {
+        const dateStr = p50DateInput.value || getTodayStr();
+        p50DateInput.value = dateStr;
+        const dayData = getP50DayData(dateStr);
+        const rulesState = dayData.rules || {};
+        const note = dayData.note || "";
+        p50RulesEl.innerHTML = "";
+        let doneCount = 0;
+        P50_RULES.forEach((rule) => {
+            const item = document.createElement("div");
+            item.className = "p50-rule-item";
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = !!rulesState[rule.id];
+            checkbox.addEventListener("change", () => {
+                const d = getP50DayData(p50DateInput.value || getTodayStr());
+                d.rules[rule.id] = checkbox.checked;
+                saveP50Data();
+                renderP50();
+            });
+            if (checkbox.checked) doneCount++;
+            const label = document.createElement("div");
+            label.className = "p50-rule-label";
+            label.textContent = rule.text;
+            item.appendChild(checkbox);
+            item.appendChild(label);
+            p50RulesEl.appendChild(item);
+        });
+        p50SummaryEl.textContent =
+            "今日完成情况： " + doneCount + " / " + P50_RULES.length + " 项打卡已完成。";
+        p50NoteInput.value = note;
+    }
+    function renderP50Calendar() {
+        const base = p50CalMonth || new Date();
+        const year = base.getFullYear();
+        const month = base.getMonth();
+        p50CalendarTitleEl.textContent =
+            "Project 50 日历 · " + year + " 年 " + (month + 1) + " 月";
+
+        const countByDay = {};
+        Object.keys(p50Data).forEach((dateStr) => {
+            const d = new Date(dateStr);
+            if (d.getFullYear() === year && d.getMonth() === month) {
+                const day = d.getDate();
+                const dayData = p50Data[dateStr];
+                const rules = dayData.rules || {};
+                let c = 0;
+                P50_RULES.forEach((r) => { if (rules[r.id]) c++; });
+                countByDay[day] = c;
+            }
+        });
+
+        const firstDay = new Date(year, month, 1);
+        const firstWeekday = firstDay.getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        p50CalendarGridEl.innerHTML = "";
+
+        const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+        weekdays.forEach((w) => {
+            const cell = document.createElement("div");
+            cell.className = "cal-cell cal-weekday";
+            cell.textContent = w;
+            p50CalendarGridEl.appendChild(cell);
+        });
+        for (let i = 0; i < firstWeekday; i++) {
+            const empty = document.createElement("div");
+            empty.className = "cal-cell cal-empty";
+            p50CalendarGridEl.appendChild(empty);
+        }
+        for (let day = 1; day <= daysInMonth; day++) {
+            const cell = document.createElement("div");
+            const count = countByDay[day] || 0;
+            let levelClass = "cal-level-0";
+            if (count >= 7) levelClass = "cal-level-4";
+            else if (count >= 5) levelClass = "cal-level-3";
+            else if (count >= 3) levelClass = "cal-level-2";
+            else if (count >= 1) levelClass = "cal-level-1";
+            cell.className = "cal-cell " + levelClass;
+            const num = document.createElement("div");
+            num.className = "cal-day-num";
+            num.textContent = day;
+            cell.appendChild(num);
+            p50CalendarGridEl.appendChild(cell);
+        }
+    }
+    function renderP50() {
+        renderP50Day();
+        renderP50Calendar();
+    }
+    p50DateInput.addEventListener("change", renderP50Day);
+    p50TodayBtn.addEventListener("click", () => {
+        p50DateInput.value = getTodayStr();
+        p50CalMonth = new Date();
+        p50CalMonth.setDate(1);
+        renderP50();
+    });
+    p50NoteInput.addEventListener("input", () => {
+        const dateStr = p50DateInput.value || getTodayStr();
+        const dayData = getP50DayData(dateStr);
+        dayData.note = p50NoteInput.value;
+        saveP50Data();
+    });
+    p50CalPrevBtn.addEventListener("click", () => {
+        p50CalMonth = shiftMonth(p50CalMonth, -1);
+        renderP50Calendar();
+    });
+    p50CalNextBtn.addEventListener("click", () => {
+        p50CalMonth = shiftMonth(p50CalMonth, 1);
+        renderP50Calendar();
+    });
+
+    /* -------------------- To-Do & 专注日历 -------------------- */
+    const TODO_STORAGE_KEY = "todo_tasks_v1";
+    let todoTasks = [];
+    const todoTitleInput = document.getElementById("todo-title");
+    const todoCategorySelect = document.getElementById("todo-category");
+    const todoDateInput = document.getElementById("todo-date");
+    const todoListEl = document.getElementById("todo-list");
+    const todoEmptyEl = document.getElementById("todo-empty");
+    const focusCalendarTitleEl = document.getElementById("focus-calendar-title");
+    const focusCalendarGridEl = document.getElementById("focus-calendar-grid");
+    const focusCalPrevBtn = document.getElementById("focus-cal-prev");
+    const focusCalNextBtn = document.getElementById("focus-cal-next");
+    let focusCalMonth;
+
+    const FOCUS_CATEGORIES = ["学习","工作","家庭","生活","娱乐","其他"];
+    const FOCUS_CATEGORY_COLORS = {
+        "学习": "#a855f7",
+        "工作": "#3b82f6",
+        "家庭": "#ec4899",
+        "生活": "#f97316",
+        "娱乐": "#22c55e",
+        "其他": "#6b7280"
+    };
+
+    function loadTodoTasks() {
+        const raw = localStorage.getItem(TODO_STORAGE_KEY);
+        if (raw) {
+            try { todoTasks = JSON.parse(raw) || []; }
+            catch { todoTasks = []; }
+        }
+    }
+    function saveTodoTasks() {
+        localStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(todoTasks));
+    }
+    function addTodoTask() {
+        const title = todoTitleInput.value.trim();
+        if (!title) {
+            alert("请先在上面输入要做的事情哦～");
+            return;
+        }
+        const category = todoCategorySelect.value;
+        const dateStr = todoDateInput.value || getTodayStr();
+        const task = {
+            id: "t_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
+            title,
+            category,
+            focusMinutes: 0,
+            date: dateStr,
+            isDone: false,
+            isRunning: false,
+            startTimeMs: null
+        };
+        todoTasks.push(task);
+        saveTodoTasks();
+        todoTitleInput.value = "";
+        renderTodoList();
+        renderFocusCalendar();
+        renderFocusSummaryChart();
+    }
+    function findTaskById(id) {
+        return todoTasks.find((t) => t.id === id);
+    }
+    function toggleTodoDone(id) {
+        const t = findTaskById(id);
+        if (!t) return;
+        t.isDone = !t.isDone;
+        saveTodoTasks();
+        renderTodoList();
+    }
+    function deleteTodo(id) {
+        todoTasks = todoTasks.filter((t) => t.id !== id);
+        saveTodoTasks();
+        renderTodoList();
+        renderFocusCalendar();
+        renderFocusSummaryChart();
+    }
+    function toggleFocus(id) {
+        const t = findTaskById(id);
+        if (!t) return;
+        if (!t.isRunning) {
+            t.isRunning = true;
+            t.startTimeMs = Date.now();
+        } else {
+            const now = Date.now();
+            const diffMin = Math.round((now - t.startTimeMs) / 60000);
+            if (diffMin > 0) t.focusMinutes += diffMin;
+            t.isRunning = false;
+            t.startTimeMs = null;
+        }
+        saveTodoTasks();
+        renderTodoList();
+        renderFocusCalendar();
+        renderFocusSummaryChart();
+    }
+    function renderTodoList() {
+        const dateStr = todoDateInput.value || getTodayStr();
+        todoDateInput.value = dateStr;
+        const dayTasks = todoTasks.filter((t) => t.date === dateStr);
+        todoListEl.innerHTML = "";
+        if (dayTasks.length === 0) {
+            todoEmptyEl.style.display = "block";
+            return;
+        } else {
+            todoEmptyEl.style.display = "none";
+        }
+        dayTasks.forEach((task) => {
+            const li = document.createElement("li");
+            li.className = "todo-item";
+            const main = document.createElement("div");
+            main.className = "todo-main";
+            const title = document.createElement("div");
+            title.className = "todo-title" + (task.isDone ? " done" : "");
+            title.textContent = task.title;
+            const meta = document.createElement("div");
+            meta.className = "todo-meta";
+            const catBadge = document.createElement("span");
+            catBadge.className = "badge-category";
+            catBadge.textContent = task.category;
+            const timeText = document.createElement("span");
+            timeText.className = "todo-meta-text";
+            const fm = task.focusMinutes || 0;
+            timeText.textContent = "专注 " + fm + " 分钟";
+            meta.appendChild(catBadge);
+            meta.appendChild(timeText);
+            main.appendChild(title);
+            main.appendChild(meta);
+
+            const actions = document.createElement("div");
+            actions.className = "todo-actions";
+            const focusBtn = document.createElement("button");
+            focusBtn.className =
+                "small-btn focus-btn" + (task.isRunning ? " stop" : "");
+            focusBtn.textContent = task.isRunning ? "结束专注" : "开始专注";
+            focusBtn.addEventListener("click", () => toggleFocus(task.id));
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "small-btn delete-btn";
+            deleteBtn.textContent = "删除";
+            deleteBtn.addEventListener("click", () => deleteTodo(task.id));
+            const doneRow = document.createElement("div");
+            doneRow.className = "done-row";
+            const doneCheckbox = document.createElement("input");
+            doneCheckbox.type = "checkbox";
+            doneCheckbox.checked = task.isDone;
+            doneCheckbox.addEventListener("change", () =>
+                toggleTodoDone(task.id)
+            );
+            const doneLabel = document.createElement("span");
+            doneLabel.textContent = "完成";
+            doneRow.appendChild(doneCheckbox);
+            doneRow.appendChild(doneLabel);
+            actions.appendChild(focusBtn);
+            actions.appendChild(deleteBtn);
+            actions.appendChild(doneRow);
+
+            li.appendChild(main);
+            li.appendChild(actions);
+            todoListEl.appendChild(li);
+        });
+    }
+    function renderFocusCalendar() {
+        const base = focusCalMonth || new Date();
+        const year = base.getFullYear();
+        const month = base.getMonth();
+        focusCalendarTitleEl.textContent =
+            "专注类别日历 · " + year + " 年 " + (month + 1) + " 月";
+
+        const categoriesByDay = {};
+        todoTasks.forEach((t) => {
+            if (!t.date || !t.focusMinutes) return;
+            const d = new Date(t.date);
+            if (d.getFullYear() === year && d.getMonth() === month) {
+                const day = d.getDate();
+                if (!categoriesByDay[day]) categoriesByDay[day] = new Set();
+                categoriesByDay[day].add(t.category || "其他");
+            }
+        });
+
+        const firstDay = new Date(year, month, 1);
+        const firstWeekday = firstDay.getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        focusCalendarGridEl.innerHTML = "";
+
+        const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+        weekdays.forEach((w) => {
+            const cell = document.createElement("div");
+            cell.className = "cal-cell cal-weekday";
+            cell.textContent = w;
+            focusCalendarGridEl.appendChild(cell);
+        });
+        for (let i = 0; i < firstWeekday; i++) {
+            const empty = document.createElement("div");
+            empty.className = "cal-cell cal-empty";
+            focusCalendarGridEl.appendChild(empty);
+        }
+        for (let day = 1; day <= daysInMonth; day++) {
+    const cell = document.createElement("div");
+    cell.className = "cal-cell";
+
+    const num = document.createElement("div");
+    num.className = "cal-day-num";
+    num.textContent = day;
+    cell.appendChild(num);
+
+    const cats = categoriesByDay[day];
+    if (cats && cats.size > 0) {
+        const row = document.createElement("div");
+        row.className = "focus-cat-row";
+        FOCUS_CATEGORIES.forEach((cat) => {
+            if (cats.has(cat)) {
+                const dot = document.createElement("div");
+                dot.className = "focus-cat-dot focus-cat-dot-" + cat;
+                row.appendChild(dot);
+            }
+        });
+        cell.appendChild(row);
+    }
+
+    // 👉 点击某一天时，切换到那天的待办列表
+    const dateStr =
+        year +
+        "-" +
+        String(month + 1).padStart(2, "0") +
+        "-" +
+        String(day).padStart(2, "0");
+
+    cell.style.cursor = "pointer";
+    cell.addEventListener("click", () => {
+        todoDateInput.value = dateStr;
+        renderTodoList();
+        // 可选：滚到上面的列表区域
+        todoListEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    focusCalendarGridEl.appendChild(cell);
+}
+
+    }
+    focusCalPrevBtn.addEventListener("click", () => {
+        focusCalMonth = shiftMonth(focusCalMonth, -1);
+        renderFocusCalendar();
+    });
+    focusCalNextBtn.addEventListener("click", () => {
+        focusCalMonth = shiftMonth(focusCalMonth, 1);
+        renderFocusCalendar();
+    });
+
+    /* -------------------- 专注时间饼图 -------------------- */
+    const focusRangeButtons = document.querySelectorAll(".focus-range-btn");
+    const focusPieCanvas = document.getElementById("focus-pie-chart");
+    let focusRange = "week";
+    let focusPieInstance = null;
+
+    focusRangeButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            focusRangeButtons.forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            focusRange = btn.dataset.range;
+            renderFocusSummaryChart();
+        });
+    });
+
+    function getRangeDates(range) {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth();
+        let start, end;
+        if (range === "week") {
+            end = new Date(year, month, today.getDate());
+            start = new Date(year, month, today.getDate() - 6);
+        } else if (range === "month") {
+            start = new Date(year, month, 1);
+            end = new Date(year, month + 1, 0);
+        } else {
+            start = new Date(year, 0, 1);
+            end = new Date(year, 11, 31);
+        }
+        start.setHours(0,0,0,0);
+        end.setHours(23,59,59,999);
+        return { start, end };
+    }
+
+    function renderFocusSummaryChart() {
+        if (!focusPieCanvas) return;
+        const ctx = focusPieCanvas.getContext("2d");
+        const { start, end } = getRangeDates(focusRange);
+        const sums = {
+            "学习": 0, "工作": 0, "家庭": 0,
+            "生活": 0, "娱乐": 0, "其他": 0
+        };
+        todoTasks.forEach((t) => {
+            if (!t.date || !t.focusMinutes) return;
+            const d = new Date(t.date);
+            if (d >= start && d <= end) {
+                const cat = FOCUS_CATEGORIES.includes(t.category) ? t.category : "其他";
+                sums[cat] += t.focusMinutes;
+            }
+        });
+        const labels = [];
+        const data = [];
+        const bgColors = [];
+        FOCUS_CATEGORIES.forEach((cat) => {
+            if (sums[cat] > 0) {
+                labels.push(cat);
+                data.push(sums[cat]);
+                bgColors.push(FOCUS_CATEGORY_COLORS[cat]);
+            }
+        });
+        if (labels.length === 0) {
+            labels.push("暂无数据");
+            data.push(1);
+            bgColors.push("#e5e7eb");
+        }
+        if (focusPieInstance) focusPieInstance.destroy();
+        focusPieInstance = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                labels,
+                datasets: [{ data, backgroundColor: bgColors }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: { boxWidth: 12, font: { size: 11 } }
+                    }
+                }
+            }
+        });
+    }
+
+    /* -------------------- 每日重要事项 -------------------- */
+    const IMPORTANT_STORAGE_KEY = "important_events_v1";
+    let importantEvents = []; // {id,title,date,type,repeat,durationDays}
+    const importantDateInput = document.getElementById("important-date");
+    const importantTitleInput = document.getElementById("important-title");
+    const importantTypeSelect = document.getElementById("important-type");
+    const importantRepeatSelect = document.getElementById("important-repeat");
+    const importantDurationInput = document.getElementById("important-duration");
+    const importantAddBtn = document.getElementById("important-add-btn");
+    const importantListEl = document.getElementById("important-list");
+    const importantCalendarTitleEl = document.getElementById("important-calendar-title");
+    const importantCalendarGridEl = document.getElementById("important-calendar-grid");
+    const importantCalPrevBtn = document.getElementById("important-cal-prev");
+    const importantCalNextBtn = document.getElementById("important-cal-next");
+    let importantCalMonth;
+
+    function loadImportantEvents() {
+        const raw = localStorage.getItem(IMPORTANT_STORAGE_KEY);
+        if (raw) {
+            try { importantEvents = JSON.parse(raw) || []; }
+            catch { importantEvents = []; }
+        }
+    }
+    function saveImportantEvents() {
+        localStorage.setItem(IMPORTANT_STORAGE_KEY, JSON.stringify(importantEvents));
+    }
+
+    function addImportantEvent() {
+        const title = importantTitleInput.value.trim();
+        if (!title) {
+            alert("请先输入重要事项内容～");
+            return;
+        }
+        const dateStr = importantDateInput.value || getTodayStr();
+        const type = importantTypeSelect.value;
+        const repeat = importantRepeatSelect.value;
+        let duration = parseInt(importantDurationInput.value, 10);
+        if (isNaN(duration) || duration < 1) duration = 1;
+        if (duration > 10) duration = 10;
+
+        const ev = {
+            id: "e_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
+            title,
+            date: dateStr,
+            type,
+            repeat,
+            durationDays: duration
+        };
+        importantEvents.push(ev);
+        saveImportantEvents();
+        importantTitleInput.value = "";
+        renderImportantList();
+        renderImportantCalendar();
+    }
+
+    function getImportantTypeClass(type) {
+        if (type === "姨妈期") return "imp-type-姨妈期";
+        if (type === "房租日") return "imp-type-房租日";
+        if (type === "生日") return "imp-type-生日";
+        if (type === "纪念日") return "imp-type-纪念日";
+        if (type === "其他") return "imp-type-其他";
+        return "imp-type-普通";
+    }
+
+    function renderImportantList() {
+        importantListEl.innerHTML = "";
+        if (importantEvents.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "weight-empty";
+            empty.textContent = "还没有重要事项，先添加一条吧～";
+            importantListEl.appendChild(empty);
+            return;
+        }
+        const sorted = [...importantEvents].sort((a, b) => new Date(a.date) - new Date(b.date));
+        sorted.forEach((ev) => {
+            const row = document.createElement("div");
+            row.className = "important-item";
+            const left = document.createElement("div");
+            const dateSpan = document.createElement("div");
+            dateSpan.textContent = ev.date + (ev.repeat === "monthly" ? " · 每月" : ev.repeat === "yearly" ? " · 每年" : "");
+            dateSpan.style.fontSize = "11px";
+            dateSpan.style.color = "#6b7280";
+            const titleSpan = document.createElement("div");
+            const badge = document.createElement("span");
+            badge.className = "important-type-badge " + getImportantTypeClass(ev.type);
+            badge.textContent = ev.type;
+            const text = document.createElement("span");
+            text.textContent = " " + ev.title;
+            titleSpan.appendChild(badge);
+            titleSpan.appendChild(text);
+            left.appendChild(titleSpan);
+            left.appendChild(dateSpan);
+
+            const right = document.createElement("button");
+            right.textContent = "删除";
+            right.className = "small-btn delete-btn";
+            right.addEventListener("click", () => {
+                importantEvents = importantEvents.filter((e) => e.id !== ev.id);
+                saveImportantEvents();
+                renderImportantList();
+                renderImportantCalendar();
+            });
+
+            row.appendChild(left);
+            row.appendChild(right);
+            importantListEl.appendChild(row);
+        });
+    }
+
+    function renderImportantCalendar() {
+        const base = importantCalMonth || new Date();
+        const year = base.getFullYear();
+        const month = base.getMonth();
+        importantCalendarTitleEl.textContent =
+            "重要事项日历 · " + year + " 年 " + (month + 1) + " 月";
+
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        // day -> events[]
+        const eventsByDay = {};
+        importantEvents.forEach((ev) => {
+            const baseDate = new Date(ev.date);
+            const baseYear = baseDate.getFullYear();
+            const baseMonth = baseDate.getMonth();
+            const baseDay = baseDate.getDate();
+            const dur = ev.durationDays || 1;
+
+            if (ev.repeat === "none") {
+                if (baseYear === year && baseMonth === month) {
+                    for (let i = 0; i < dur; i++) {
+                        const d = baseDay + i;
+                        if (d >= 1 && d <= daysInMonth) {
+                            if (!eventsByDay[d]) eventsByDay[d] = [];
+                            eventsByDay[d].push(ev);
+                        }
+                    }
+                }
+            } else if (ev.repeat === "monthly") {
+                for (let i = 0; i < dur; i++) {
+                    const d = baseDay + i;
+                    if (d >= 1 && d <= daysInMonth) {
+                        if (!eventsByDay[d]) eventsByDay[d] = [];
+                        eventsByDay[d].push(ev);
+                    }
+                }
+            } else if (ev.repeat === "yearly") {
+                if (baseMonth === month) {
+                    for (let i = 0; i < dur; i++) {
+                        const d = baseDay + i;
+                        if (d >= 1 && d <= daysInMonth) {
+                            if (!eventsByDay[d]) eventsByDay[d] = [];
+                            eventsByDay[d].push(ev);
+                        }
+                    }
+                }
+            }
+        });
+
+        const firstDay = new Date(year, month, 1);
+        const firstWeekday = firstDay.getDay();
+        importantCalendarGridEl.innerHTML = "";
+
+        const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+        weekdays.forEach((w) => {
+            const cell = document.createElement("div");
+            cell.className = "cal-cell cal-weekday";
+            cell.textContent = w;
+            importantCalendarGridEl.appendChild(cell);
+        });
+        for (let i = 0; i < firstWeekday; i++) {
+            const empty = document.createElement("div");
+            empty.className = "cal-cell cal-empty";
+            importantCalendarGridEl.appendChild(empty);
+        }
+        for (let day = 1; day <= daysInMonth; day++) {
+            const cell = document.createElement("div");
+            cell.className = "cal-cell";
+            const num = document.createElement("div");
+            num.className = "cal-day-num";
+            num.textContent = day;
+            cell.appendChild(num);
+
+            const events = eventsByDay[day] || [];
+            if (events.length > 0) {
+                events.slice(0, 3).forEach((ev) => {
+                    const pill = document.createElement("div");
+                    const cls = getImportantTypeClass(ev.type);
+                    pill.className = "imp-pill " + cls;
+                    pill.textContent = ev.title.slice(0, 6);
+                    cell.appendChild(pill);
+                });
+                if (events.length > 3) {
+                    const more = document.createElement("div");
+                    more.style.fontSize = "9px";
+                    more.style.marginTop = "1px";
+                    more.textContent = "…";
+                    cell.appendChild(more);
+                }
+            }
+
+            importantCalendarGridEl.appendChild(cell);
+        }
+    }
+
+    importantAddBtn.addEventListener("click", addImportantEvent);
+    importantDateInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") addImportantEvent();
+    });
+    importantCalPrevBtn.addEventListener("click", () => {
+        importantCalMonth = shiftMonth(importantCalMonth, -1);
+        renderImportantCalendar();
+    });
+    importantCalNextBtn.addEventListener("click", () => {
+        importantCalMonth = shiftMonth(importantCalMonth, 1);
+        renderImportantCalendar();
+    });
+
+    /* -------------------- 体重记录 & 折线图 -------------------- */
+    const WEIGHT_STORAGE_KEY = "weight_records_v1";
+    let weightRecords = [];
+    const weightDateInput = document.getElementById("weight-date");
+    const weightValueInput = document.getElementById("weight-value");
+    const weightAddBtn = document.getElementById("weight-add-btn");
+    const weightListEl = document.getElementById("weight-list");
+    const weightEmptyEl = document.getElementById("weight-empty");
+    const weightMonthInput = document.getElementById("weight-month");
+    const weightChartCanvas = document.getElementById("weight-chart");
+    let weightChartInstance = null;
+
+    function loadWeightRecords() {
+        const raw = localStorage.getItem(WEIGHT_STORAGE_KEY);
+        if (raw) {
+            try { weightRecords = JSON.parse(raw) || []; }
+            catch { weightRecords = []; }
+        }
+    }
+    function saveWeightRecords() {
+        localStorage.setItem(WEIGHT_STORAGE_KEY, JSON.stringify(weightRecords));
+    }
+    function addWeightRecord() {
+        const dateStr = weightDateInput.value || getTodayStr();
+        const weightVal = parseFloat(weightValueInput.value);
+        if (!weightVal || isNaN(weightVal)) return;
+        weightRecords.push({ date: dateStr, weight: weightVal });
+        weightRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
+        saveWeightRecords();
+        weightValueInput.value = "";
+        renderWeightList();
+        renderWeightChart();
+    }
+    function renderWeightList() {
+        weightListEl.innerHTML = "";
+        if (weightRecords.length === 0) {
+            weightEmptyEl.style.display = "block";
+            return;
+        } else {
+            weightEmptyEl.style.display = "none";
+        }
+        const reversed = [...weightRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
+        reversed.forEach((rec) => {
+            const item = document.createElement("div");
+            item.className = "weight-item";
+            const left = document.createElement("span");
+            left.textContent = rec.date;
+            const right = document.createElement("span");
+            right.textContent = rec.weight.toFixed(1) + " kg";
+            item.appendChild(left);
+            item.appendChild(right);
+            weightListEl.appendChild(item);
+        });
+    }
+    function renderWeightChart() {
+        const monthStr = weightMonthInput.value || getTodayMonthStr();
+        weightMonthInput.value = monthStr;
+        if (!monthStr) return;
+        const [yearStr, monthStrNum] = monthStr.split("-");
+        const year = parseInt(yearStr, 10);
+        const monthIndex = parseInt(monthStrNum, 10) - 1;
+        const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+        const labels = [];
+        const dataMap = {};
+        for (let d = 1; d <= daysInMonth; d++) labels.push(d.toString());
+        weightRecords.forEach((rec) => {
+            const d = new Date(rec.date);
+            if (d.getFullYear() === year && d.getMonth() === monthIndex) {
+                const day = d.getDate();
+                dataMap[day] = rec.weight;
+            }
+        });
+        const data = labels.map((label) => {
+            const day = parseInt(label, 10);
+            return dataMap[day] !== undefined ? dataMap[day] : null;
+        });
+        if (weightChartInstance) weightChartInstance.destroy();
+        const ctx = weightChartCanvas.getContext("2d");
+        weightChartInstance = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels,
+                datasets: [{
+                    label: "体重（kg）",
+                    data,
+                    spanGaps: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: { display: true, text: "日期" },
+                        ticks: { maxTicksLimit: 10 }
+                    },
+                    y: {
+                        title: { display: true, text: "体重（kg）" },
+                        beginAtZero: false
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+    weightAddBtn.addEventListener("click", addWeightRecord);
+    weightValueInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") addWeightRecord();
+    });
+    weightMonthInput.addEventListener("change", renderWeightChart);
+
+    /* -------------------- 刷新按钮：刷新到最新版本（不清空数据） -------------------- */
+    const appReloadBtn = document.getElementById("app-reload-btn");
+    if (appReloadBtn) {
+        appReloadBtn.addEventListener("click", () => {
+            location.reload();
+        });
+    }
+
+    /* 事件 & 初始化 */
+    todoDateInput.addEventListener("change", renderTodoList);
+
+    (function init() {
+        const today = getTodayStr();
+        p50DateInput.value = today;
+        todoDateInput.value = today;
+        importantDateInput.value = today;
+        weightDateInput.value = today;
+        weightMonthInput.value = getTodayMonthStr();
+
+        p50CalMonth = new Date(); p50CalMonth.setDate(1);
+        focusCalMonth = new Date(); focusCalMonth.setDate(1);
+        importantCalMonth = new Date(); importantCalMonth.setDate(1);
+
+        loadP50Data();
+        loadTodoTasks();
+        loadImportantEvents();
+        loadWeightRecords();
+
+        renderP50();
+        renderTodoList();
+        renderFocusCalendar();
+        renderFocusSummaryChart();
+        renderImportantList();
+        renderImportantCalendar();
+        renderWeightList();
+        renderWeightChart();
+    })();
+</script>
+</body>
+</html>
