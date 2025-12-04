@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>我的日程清单 · Project 50</title>
+
+    <!-- APP 图标 & PWA 关键文件 -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="app-icon-v2.png">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 16px 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+            "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: #f5f5f7;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            color: #111827;
+        }
+
+        .app {
+            width: 95%;
+            max-width: 540px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 18px 35px rgba(15, 23, 42, 0.12);
+            padding: 18px 18px 20px;
+        }
+
+        .app-header {
+            padding: 4px 2px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 10px;
+        }
+
+        .app-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 20px;
+            margin: 0;
+        }
+
+        .app-title span.emoji {
+            font-size: 20px;
+        }
+
+        .app-subtitle {
+            margin-top: 4px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        /* tabs */
+        .tab-header {
+            margin-top: 10px;
+            margin-bottom: 12px;
+            padding: 3px;
+            background: #f3f4f6;
+            border-radius: 999px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 6px 6px;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 999px;
+            color: #4b5563;
+        }
+
+        .tab-btn.active {
+            background: #ffffff;
+            color: #111827;
+            box-shadow: 0 1px 4px rgba(148, 163, 184, 0.4);
+            font-weight: 600;
+        }
+
+        .tab-section {
+            display: none;
+        }
+
+        .tab-section.active {
+            display: block;
+        }
+
+        h2.section-title {
+            font-size: 16px;
+            margin: 0 0 4px;
+        }
+
+        .section-desc {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+
+        /* 通用输入样式 */
+        input[type="text"],
+        input[type="date"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            font-size: 14px;
+            outline: none;
+            background: #f9fafb;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.18);
+            background: #ffffff;
+        }
+
+        button {
+            font-family: inherit;
+        }
+
+        .primary-btn {
+            border: none;
+            border-radius: 999px;
+            padding: 8px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            color: #ffffff;
+            white-space: nowrap;
+        }
+
+        .primary-btn:active {
+            transform: scale(0.97);
+        }
+
+        .small-btn {
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 11px;
+        }
+
+        .badge-soft {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .row-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hint {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        /* 卡片 */
+        .card {
+            border-radius: 14px;
+            padding: 10px 10px 12px;
+            background: #f9fafb;
+            box-shadow: inset 0 0 0 1px #e5e7eb;
+            margin-bottom: 10px;
+        }
+
+        /* Project 50 */
+        .p50-date-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .p50-date-row input[type="date"] {
+            flex: 1;
+        }
+
+        .p50-rules {
+            border-radius: 12px;
+            background: #ffffff;
+            padding: 6px 8px;
+            max-height: 220px;
+            overflow-y: auto;
+            box-shadow: 0 1px 3px rgba(148, 163, 184, 0.25);
+        }
+
+        .p50-rule-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .p50-rule-item:last-child {
+            border-bottom: none;
+        }
+
+        .p50-rule-label {
+            font-size: 13px;
+        }
+
+        .p50-summary {
+            font-size: 13px;
+            color: #4b5563;
+            margin-top: 6px;
+        }
+
+        .p50-note textarea {
+            min-height: 70px;
+            resize: vertical;
+            font-size: 13px;
+        }
+
+        /* To-Do */
+        .todo-top-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .todo-top-row input[type="text"] {
+            flex: 2;
+        }
+
+        .todo-top-row select {
+            flex: 1.3;
+        }
+
+        .todo-second-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .todo-second-row input[type="date"] {
+            flex: 1;
+        }
+
+        .todo-list {
+            list-style: none;
+            padding: 0;
+            margin: 6px 0 0;
+            max-height: 210px;
+            overflow-y: auto;
+        }
+
+        .todo-empty {
+            font-size: 13px;
+            color: #9ca3af;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 7px 2px;
+            border-bottom: 1px solid #e5e7eb;
+            gap: 6px;
+        }
+
+        .todo-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .todo-title {
+            font-size: 14px;
+            word-break: break-word;
+        }
+
+        .todo-title.done {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+
+        .todo-meta {
+            margin-top: 2px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .todo-meta-text {
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .badge-category {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .todo-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-end;
+        }
+
+        .focus-btn {
+            border: none;
+            cursor: pointer;
+            background: #6366f1;
+            color: #fff;
+        }
+
+        .focus-btn.stop {
+            background: #ec4899;
+        }
+
+        .delete-btn {
+            border: none;
+            cursor: pointer;
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .done-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: #4b5563;
+        }
+
+        /* 日历通用 */
+        .calendar-wrapper {
+            margin-top: 10px;
+            border-radius: 14px;
+            background: #f9fafb;
+            padding: 8px;
+            box-shadow: inset 0 0 0 1px #e5e7eb;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .calendar-title {
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        .cal-nav {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .cal-nav-btn {
+            border: none;
+            border-radius: 999px;
+            padding: 2px 7px;
+            font-size: 12px;
+            cursor: pointer;
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            font-size: 11px;
+        }
+
+        .cal-cell {
+            min-height: 32px;
+            border-radius: 7px;
+            padding: 2px 3px;
+            text-align: center;
+            background: #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cal-weekday {
+            font-weight: 600;
+            background: transparent;
+            color: #6b7280;
+        }
+
+        .cal-empty {
+            background: transparent;
+        }
+
+        .cal-day-num {
+            font-size: 11px;
+        }
+
+        .cal-minutes {
+            font-size: 10px;
+            color: #374151;
+        }
+
+        /* 紫色系等级：0 最浅，4 最深 */
+        .cal-level-0 { background: #e5e7eb; color: #4b5563; }
+        .cal-level-1 { background: #f5f3ff; color: #5b21b6; }
+        .cal-level-2 { background: #e0e7ff; color: #4338ca; }
+        .cal-level-3 { background: #c7d2fe; color: #3730a3; }
+        .cal-level-4 { background: #a855f7; color: #f9fafb; }
+
+        /* 体重记录相关 */
+        .weight-input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .weight-input-row input[type="date"] {
+            flex: 1.2;
+        }
+
+        .weight-input-row input[type="number"] {
+            flex: 1;
+        }
+
+        .weight-list {
+            margin-top: 6px;
+            max-height: 140px;
+            overflow-y: auto;
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        .weight-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 2px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .weight-empty {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-top: 6px;
+            text-align: center;
+        }
+
+        .weight-chart-container {
+            margin-top: 8px;
+        }
+
+        .weight-chart-container canvas {
+            width: 100%;
+            max-height: 220px;
+        }
+
+        .weight-month-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .weight-month-row input[type="month"] {
+            flex: 1;
+        }
+
+        @media (max-width: 400px) {
+            .todo-top-row,
+            .todo-second-row,
+            .p50-date-row,
+            .weight-input-row,
+            .weight-month-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header class="app-header">
+        <h1 class="app-title">
+            <span class="emoji">📒</span>
+            <span>我的日程清单</span>
+        </h1>
+        <div class="app-subtitle">
+            Project 50 打卡 + To-Do 专注时间 + 体重记录（数据只保存在本地）
+        </div>
+    </header>
+
+    <!-- 顶部 tab -->
+    <div class="tab-header">
+        <button class="tab-btn active" data-target="tab-project50">Project 50 打卡</button>
+        <button class="tab-btn" data-target="tab-todo">To-Do & 专注日历</button>
+        <button class="tab-btn" data-target="tab-weight">体重记录</button>
+    </div>
+
+    <!-- Project 50 模块 -->
+    <section id="tab-project50" class="tab-section active">
+        <div class="card">
+            <h2 class="section-title">每日 Challenge</h2>
+            <div class="section-desc">
+                根据 Project 50（easy 模式）打卡，7 条固定规则，每天复盘自己的执行。
+            </div>
+
+            <div class="p50-date-row">
+                <input type="date" id="p50-date" />
+                <button class="small-btn primary-btn" id="p50-today-btn">跳到今天</button>
+            </div>
+
+            <div class="p50-rules" id="p50-rules"></div>
+            <div class="p50-summary" id="p50-summary"></div>
+        </div>
+
+        <div class="card p50-note">
+            <div class="row-between">
+                <span class="hint">记录今天的挑战行程 / 感受 / 复盘：</span>
+                <span class="badge-soft">仅本地可见</span>
+            </div>
+            <textarea id="p50-note-input" placeholder="例如：7:30 起床，锻炼 30 分钟，阅读 6 页……"></textarea>
+        </div>
+
+        <!-- Project50 日历汇总（只用色块，不显示“几项”数字） -->
+        <div class="calendar-wrapper">
+            <div class="calendar-header">
+                <div class="calendar-title" id="p50-calendar-title">Project 50 完成情况</div>
+                <div class="cal-nav">
+                    <button class="cal-nav-btn" id="p50-cal-prev">‹</button>
+                    <button class="cal-nav-btn" id="p50-cal-next">›</button>
+                </div>
+            </div>
+            <div class="hint">色块深浅表示当天完成规则数量，越深完成越多。</div>
+            <div class="calendar-grid" id="p50-calendar-grid"></div>
+        </div>
+    </section>
+
+    <!-- To-Do 模块 -->
+    <section id="tab-todo" class="tab-section">
+        <div class="card">
+            <h2 class="section-title">待办事项 & 专注记录</h2>
+            <div class="section-desc">
+                为每天创建待办，按类别管理。点击“开始专注 / 结束专注”记录真实专注时间。
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="todo-top-row">
+                <input type="text" id="todo-title" placeholder="要做什么？例如：阅读《XXX》5 页" />
+                <select id="todo-category">
+                    <option value="学习">学习</option>
+                    <option value="工作">工作</option>
+                    <option value="家庭">家庭</option>
+                    <option value="生活">生活</option>
+                    <option value="娱乐">娱乐</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+            <div class="todo-second-row">
+                <input type="date" id="todo-date" />
+                <button class="primary-btn" id="todo-add-btn">添加待办</button>
+            </div>
+            <div class="hint">
+                为不同日期添加待办；开始 / 结束专注会累计该任务的专注分钟数。
+            </div>
+
+            <!-- 列表区域 -->
+            <ul class="todo-list" id="todo-list"></ul>
+            <div class="todo-empty" id="todo-empty">这天还没有待办，可以先添加一条～</div>
+        </div>
+
+        <!-- 专注时间日历 -->
+        <div class="calendar-wrapper">
+            <div class="calendar-header">
+                <div class="calendar-title" id="focus-calendar-title">专注时间日历</div>
+                <div class="cal-nav">
+                    <button class="cal-nav-btn" id="focus-cal-prev">‹</button>
+                    <button class="cal-nav-btn" id="focus-cal-next">›</button>
+                </div>
+            </div>
+            <div class="hint">色块深浅表示当天专注总时长（所有任务之和）。</div>
+            <div class="calendar-grid" id="focus-calendar-grid"></div>
+        </div>
+    </section>
+
+    <!-- 体重记录模块 -->
+    <section id="tab-weight" class="tab-section">
+        <div class="card">
+            <h2 class="section-title">体重记录</h2>
+            <div class="section-desc">
+                记录每天的体重变化，并按月份查看折线图走势。数值只保存在本地浏览器。
+            </div>
+
+            <div class="weight-input-row">
+                <input type="date" id="weight-date" />
+                <input type="number" id="weight-value" step="0.1" placeholder="体重（kg）" />
+            </div>
+            <button class="primary-btn" id="weight-add-btn">添加记录</button>
+            <div class="hint" style="margin-top:6px;">
+                建议每天同一时间称重，比如早上起床后空腹，记录更稳定。
+            </div>
+
+            <div class="weight-list" id="weight-list"></div>
+            <div class="weight-empty" id="weight-empty">还没有体重记录，先添加一条吧～</div>
+        </div>
+
+        <div class="card">
+            <div class="weight-month-row">
+                <span class="hint">选择要查看的月份：</span>
+                <input type="month" id="weight-month" />
+            </div>
+            <div class="weight-chart-container">
+                <canvas id="weight-chart"></canvas>
+            </div>
+            <div class="hint" style="margin-top:6px;">
+                折线图会显示该月每天最后一次记录的体重，方便看趋势，不要被单日波动吓到～
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- 折线图库：Chart.js（通过 CDN 引入） -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    /* 工具：获取今天 yyyy-mm-dd */
+    function getTodayStr() {
+        const d = new Date();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return d.getFullYear() + "-" + m + "-" + day;
+    }
+
+    /* 工具：获取当前 yyyy-MM（用于 month input） */
+    function getTodayMonthStr() {
+        const d = new Date();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        return d.getFullYear() + "-" + m;
+    }
+
+    /* 工具：按月偏移 */
+    function shiftMonth(date, delta) {
+        return new Date(date.getFullYear(), date.getMonth() + delta, 1);
+    }
+
+    /* Tab 切换 */
+    (function initTabs() {
+        const tabButtons = document.querySelectorAll(".tab-btn");
+        const sections = document.querySelectorAll(".tab-section");
+
+        tabButtons.forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const targetId = btn.dataset.target;
+                tabButtons.forEach((b) => b.classList.remove("active"));
+                sections.forEach((sec) => sec.classList.remove("active"));
+                btn.classList.add("active");
+                document.getElementById(targetId).classList.add("active");
+            });
+        });
+    })();
+
+    /* -------------------- Project 50 -------------------- */
+    const P50_RULES = [
+        { id: "wake", text: "早上 8 点前起床" },
+        { id: "read", text: "每天阅读书籍至少 5 页" },
+        { id: "exercise", text: "每天锻炼至少 30 分钟" },
+        { id: "nosoda", text: "不喝碳酸饮料" },
+        { id: "morning_routine", text: "完成晨起行程（不玩手机，但可以放音乐）" },
+        { id: "plan_day", text: "记录今天的挑战行程（写计划）" },
+        { id: "reflect", text: "简单复盘：今天有没有比昨天更好一点？" }
+    ];
+
+    const P50_STORAGE_KEY = "project50_data_v1";
+    let p50Data = {}; // { dateStr: { rules:{id:bool}, note:string } }
+
+    const p50DateInput = document.getElementById("p50-date");
+    const p50TodayBtn = document.getElementById("p50-today-btn");
+    const p50RulesEl = document.getElementById("p50-rules");
+    const p50SummaryEl = document.getElementById("p50-summary");
+    const p50NoteInput = document.getElementById("p50-note-input");
+    const p50CalendarTitleEl = document.getElementById("p50-calendar-title");
+    const p50CalendarGridEl = document.getElementById("p50-calendar-grid");
+    const p50CalPrevBtn = document.getElementById("p50-cal-prev");
+    const p50CalNextBtn = document.getElementById("p50-cal-next");
+
+    let p50CalMonth; // 当前 Project50 日历显示月份（指当月1日）
+
+    function loadP50Data() {
+        const raw = localStorage.getItem(P50_STORAGE_KEY);
+        if (raw) {
+            try {
+                p50Data = JSON.parse(raw) || {};
+            } catch {
+                p50Data = {};
+            }
+        }
+    }
+
+    function saveP50Data() {
+        localStorage.setItem(P50_STORAGE_KEY, JSON.stringify(p50Data));
+    }
+
+    function getP50DayData(dateStr) {
+        if (!p50Data[dateStr]) {
+            p50Data[dateStr] = { rules: {}, note: "" };
+        }
+        return p50Data[dateStr];
+    }
+
+    function renderP50Day() {
+        const dateStr = p50DateInput.value || getTodayStr();
+        p50DateInput.value = dateStr;
+
+        const dayData = getP50DayData(dateStr);
+        const rulesState = dayData.rules || {};
+        const note = dayData.note || "";
+
+        p50RulesEl.innerHTML = "";
+
+        let doneCount = 0;
+        P50_RULES.forEach((rule) => {
+            const item = document.createElement("div");
+            item.className = "p50-rule-item";
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = !!rulesState[rule.id];
+
+            checkbox.addEventListener("change", () => {
+                const d = getP50DayData(p50DateInput.value || getTodayStr());
+                d.rules[rule.id] = checkbox.checked;
+                saveP50Data();
+                renderP50(); // 同时刷新日历
+            });
+
+            if (checkbox.checked) doneCount++;
+
+            const label = document.createElement("div");
+            label.className = "p50-rule-label";
+            label.textContent = rule.text;
+
+            item.appendChild(checkbox);
+            item.appendChild(label);
+            p50RulesEl.appendChild(item);
+        });
+
+        p50SummaryEl.textContent =
+            "今日完成情况： " +
+            doneCount +
+            " / " +
+            P50_RULES.length +
+            " 项打卡已完成。";
+
+        p50NoteInput.value = note;
+    }
+
+    function renderP50Calendar() {
+        const base = p50CalMonth || new Date();
+        const year = base.getFullYear();
+        const month = base.getMonth(); // 0–11
+
+        p50CalendarTitleEl.textContent =
+            "Project 50 日历 · " + year + " 年 " + (month + 1) + " 月";
+
+        // 统计本月每天完成条数
+        const countByDay = {};
+        Object.keys(p50Data).forEach((dateStr) => {
+            const d = new Date(dateStr);
+            if (d.getFullYear() === year && d.getMonth() === month) {
+                const day = d.getDate();
+                const dayData = p50Data[dateStr];
+                const rules = dayData.rules || {};
+                let c = 0;
+                P50_RULES.forEach((r) => {
+                    if (rules[r.id]) c++;
+                });
+                countByDay[day] = c;
+            }
+        });
+
+        const firstDay = new Date(year, month, 1);
+        const firstWeekday = firstDay.getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        p50CalendarGridEl.innerHTML = "";
+
+        const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+        weekdays.forEach((w) => {
+            const cell = document.createElement("div");
+            cell.className = "cal-cell cal-weekday";
+            cell.textContent = w;
+            p50CalendarGridEl.appendChild(cell);
+        });
+
+        for (let i = 0; i < firstWeekday; i++) {
+            const empty = document.createElement("div");
+            empty.className = "cal-cell cal-empty";
+            p50CalendarGridEl.appendChild(empty);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const cell = document.createElement("div");
+            const count = countByDay[day] || 0;
+
+            let levelClass = "cal-level-0";
+            if (count >= 7) levelClass = "cal-level-4";
+            else if (count >= 5) levelClass = "cal-level-3";
+            else if (count >= 3) levelClass = "cal-level-2";
+            else if (count >= 1) levelClass = "cal-level-1";
+
+            cell.className = "cal-cell " + levelClass;
+
+            const num = document.createElement("div");
+            num.className = "cal-day-num";
+            num.textContent = day;
+
+            cell.appendChild(num);
+            p50CalendarGridEl.appendChild(cell);
+        }
+    }
+
+    function renderP50() {
+        renderP50Day();
+        renderP50Calendar();
+    }
+
+    p50DateInput.addEventListener("change", () => {
+        renderP50Day();
+    });
+
+    p50TodayBtn.addEventListener("click", () => {
+        p50DateInput.value = getTodayStr();
+        p50CalMonth = new Date();
+        p50CalMonth.setDate(1);
+        renderP50();
+    });
+
+    p50NoteInput.addEventListener("input", () => {
+        const dateStr = p50DateInput.value || getTodayStr();
+        const dayData = getP50DayData(dateStr);
+        dayData.note = p50NoteInput.value;
+        saveP50Data();
+    });
+
+    p50CalPrevBtn.addEventListener("click", () => {
+        p50CalMonth = shiftMonth(p50CalMonth, -1);
+        renderP50Calendar();
+    });
+
+    p50CalNextBtn.addEventListener("click", () => {
+        p50CalMonth = shiftMonth(p50CalMonth, 1);
+        renderP50Calendar();
+    });
+
+    /* -------------------- To-Do & 专注日历 -------------------- */
+    const TODO_STORAGE_KEY = "todo_tasks_v1";
+    let todoTasks = []; // {id,title,category,focusMinutes,date,isDone,isRunning,startTimeMs}
+
+    const todoTitleInput = document.getElementById("todo-title");
+    const todoCategorySelect = document.getElementById("todo-category");
+    const todoDateInput = document.getElementById("todo-date");
+    const todoAddBtn = document.getElementById("todo-add-btn");
+    const todoListEl = document.getElementById("todo-list");
+    const todoEmptyEl = document.getElementById("todo-empty");
+
+    const focusCalendarTitleEl = document.getElementById("focus-calendar-title");
+    const focusCalendarGridEl = document.getElementById("focus-calendar-grid");
+    const focusCalPrevBtn = document.getElementById("focus-cal-prev");
+    const focusCalNextBtn = document.getElementById("focus-cal-next");
+
+    let focusCalMonth; // 当前专注日历显示月份
+
+    function loadTodoTasks() {
+        const raw = localStorage.getItem(TODO_STORAGE_KEY);
+        if (raw) {
+            try {
+                todoTasks = JSON.parse(raw) || [];
+            } catch {
+                todoTasks = [];
+            }
+        }
+    }
+
+    function saveTodoTasks() {
+        localStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(todoTasks));
+    }
+
+    function addTodoTask() {
+        const title = todoTitleInput.value.trim();
+        if (!title) return;
+
+        const category = todoCategorySelect.value;
+        const dateStr = todoDateInput.value || getTodayStr();
+
+        const task = {
+            id: "t_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
+            title,
+            category,
+            focusMinutes: 0,
+            date: dateStr,
+            isDone: false,
+            isRunning: false,
+            startTimeMs: null
+        };
+
+        todoTasks.push(task);
+        saveTodoTasks();
+        todoTitleInput.value = "";
+        renderTodoList();
+        renderFocusCalendar();
+    }
+
+    function findTaskById(id) {
+        return todoTasks.find((t) => t.id === id);
+    }
+
+    function toggleTodoDone(id) {
+        const t = findTaskById(id);
+        if (!t) return;
+        t.isDone = !t.isDone;
+        saveTodoTasks();
+        renderTodoList();
+    }
+
+    function deleteTodo(id) {
+        todoTasks = todoTasks.filter((t) => t.id !== id);
+        saveTodoTasks();
+        renderTodoList();
+        renderFocusCalendar();
+    }
+
+    function toggleFocus(id) {
+        const t = findTaskById(id);
+        if (!t) return;
+
+        if (!t.isRunning) {
+            t.isRunning = true;
+            t.startTimeMs = Date.now();
+        } else {
+            const now = Date.now();
+            const diffMin = Math.round((now - t.startTimeMs) / 60000);
+            if (diffMin > 0) {
+                t.focusMinutes += diffMin;
+            }
+            t.isRunning = false;
+            t.startTimeMs = null;
+        }
+        saveTodoTasks();
+        renderTodoList();
+        renderFocusCalendar();
+    }
+
+    function renderTodoList() {
+        const dateStr = todoDateInput.value || getTodayStr();
+        todoDateInput.value = dateStr;
+
+        const dayTasks = todoTasks.filter((t) => t.date === dateStr);
+        todoListEl.innerHTML = "";
+
+        if (dayTasks.length === 0) {
+            todoEmptyEl.style.display = "block";
+            return;
+        } else {
+            todoEmptyEl.style.display = "none";
+        }
+
+        dayTasks.forEach((task) => {
+            const li = document.createElement("li");
+            li.className = "todo-item";
+
+            const main = document.createElement("div");
+            main.className = "todo-main";
+
+            const title = document.createElement("div");
+            title.className = "todo-title" + (task.isDone ? " done" : "");
+            title.textContent = task.title;
+
+            const meta = document.createElement("div");
+            meta.className = "todo-meta";
+
+            const catBadge = document.createElement("span");
+            catBadge.className = "badge-category";
+            catBadge.textContent = task.category;
+
+            const timeText = document.createElement("span");
+            timeText.className = "todo-meta-text";
+            const fm = task.focusMinutes || 0;
+            timeText.textContent = "专注 " + fm + " 分钟";
+
+            meta.appendChild(catBadge);
+            meta.appendChild(timeText);
+
+            main.appendChild(title);
+            main.appendChild(meta);
+
+            const actions = document.createElement("div");
+            actions.className = "todo-actions";
+
+            const focusBtn = document.createElement("button");
+            focusBtn.className =
+                "small-btn focus-btn" + (task.isRunning ? " stop" : "");
+            focusBtn.textContent = task.isRunning ? "结束专注" : "开始专注";
+            focusBtn.addEventListener("click", () => toggleFocus(task.id));
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "small-btn delete-btn";
+            deleteBtn.textContent = "删除";
+            deleteBtn.addEventListener("click", () => deleteTodo(task.id));
+
+            const doneRow = document.createElement("div");
+            doneRow.className = "done-row";
+            const doneCheckbox = document.createElement("input");
+            doneCheckbox.type = "checkbox";
+            doneCheckbox.checked = task.isDone;
+            doneCheckbox.addEventListener("change", () =>
+                toggleTodoDone(task.id)
+            );
+            const doneLabel = document.createElement("span");
+            doneLabel.textContent = "完成";
+
+            doneRow.appendChild(doneCheckbox);
+            doneRow.appendChild(doneLabel);
+
+            actions.appendChild(focusBtn);
+            actions.appendChild(deleteBtn);
+            actions.appendChild(doneRow);
+
+            li.appendChild(main);
+            li.appendChild(actions);
+            todoListEl.appendChild(li);
+        });
+    }
+
+    function renderFocusCalendar() {
+        const base = focusCalMonth || new Date();
+        const year = base.getFullYear();
+        const month = base.getMonth();
+
+        focusCalendarTitleEl.textContent =
+            "专注时间日历 · " + year + " 年 " + (month + 1) + " 月";
+
+        const totalByDay = {}; // day -> minutes
+        todoTasks.forEach((t) => {
+            if (!t.date || !t.focusMinutes) return;
+            const d = new Date(t.date);
+            if (d.getFullYear() === year && d.getMonth() === month) {
+                const day = d.getDate();
+                if (!totalByDay[day]) totalByDay[day] = 0;
+                totalByDay[day] += t.focusMinutes;
+            }
+        });
+
+        const firstDay = new Date(year, month, 1);
+        const firstWeekday = firstDay.getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        focusCalendarGridEl.innerHTML = "";
+
+        const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+        weekdays.forEach((w) => {
+            const cell = document.createElement("div");
+            cell.className = "cal-cell cal-weekday";
+            cell.textContent = w;
+            focusCalendarGridEl.appendChild(cell);
+        });
+
+        for (let i = 0; i < firstWeekday; i++) {
+            const empty = document.createElement("div");
+            empty.className = "cal-cell cal-empty";
+            focusCalendarGridEl.appendChild(empty);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const cell = document.createElement("div");
+            const minutes = totalByDay[day] || 0;
+
+            let levelClass = "cal-level-0";
+            if (minutes >= 120) levelClass = "cal-level-4";
+            else if (minutes >= 60) levelClass = "cal-level-3";
+            else if (minutes >= 30) levelClass = "cal-level-2";
+            else if (minutes > 0) levelClass = "cal-level-1";
+
+            cell.className = "cal-cell " + levelClass;
+
+            const num = document.createElement("div");
+            num.className = "cal-day-num";
+            num.textContent = day;
+
+            const m = document.createElement("div");
+            m.className = "cal-minutes";
+            m.textContent = minutes > 0 ? minutes + " 分钟" : "";
+
+            cell.appendChild(num);
+            cell.appendChild(m);
+            focusCalendarGridEl.appendChild(cell);
+        }
+    }
+
+    focusCalPrevBtn.addEventListener("click", () => {
+        focusCalMonth = shiftMonth(focusCalMonth, -1);
+        renderFocusCalendar();
+    });
+
+    focusCalNextBtn.addEventListener("click", () => {
+        focusCalMonth = shiftMonth(focusCalMonth, 1);
+        renderFocusCalendar();
+    });
+
+    /* -------------------- 体重记录 & 折线图 -------------------- */
+    const WEIGHT_STORAGE_KEY = "weight_records_v1";
+    let weightRecords = []; // [{date:'yyyy-mm-dd', weight:number}]
+
+    const weightDateInput = document.getElementById("weight-date");
+    const weightValueInput = document.getElementById("weight-value");
+    const weightAddBtn = document.getElementById("weight-add-btn");
+    const weightListEl = document.getElementById("weight-list");
+    const weightEmptyEl = document.getElementById("weight-empty");
+    const weightMonthInput = document.getElementById("weight-month");
+    const weightChartCanvas = document.getElementById("weight-chart");
+
+    let weightChartInstance = null;
+
+    function loadWeightRecords() {
+        const raw = localStorage.getItem(WEIGHT_STORAGE_KEY);
+        if (raw) {
+            try {
+                weightRecords = JSON.parse(raw) || [];
+            } catch {
+                weightRecords = [];
+            }
+        }
+    }
+
+    function saveWeightRecords() {
+        localStorage.setItem(WEIGHT_STORAGE_KEY, JSON.stringify(weightRecords));
+    }
+
+    function addWeightRecord() {
+        const dateStr = weightDateInput.value || getTodayStr();
+        const weightVal = parseFloat(weightValueInput.value);
+        if (!weightVal || isNaN(weightVal)) return;
+
+        // 如果同一天已有记录，可以选择覆盖最后一条或追加，这里采用追加策略
+        weightRecords.push({
+            date: dateStr,
+            weight: weightVal
+        });
+
+        // 按日期排序
+        weightRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        saveWeightRecords();
+        weightValueInput.value = "";
+        renderWeightList();
+        renderWeightChart();
+    }
+
+    function renderWeightList() {
+        weightListEl.innerHTML = "";
+        if (weightRecords.length === 0) {
+            weightEmptyEl.style.display = "block";
+            return;
+        } else {
+            weightEmptyEl.style.display = "none";
+        }
+
+        // 倒序显示（最近在上）
+        const reversed = [...weightRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
+        reversed.forEach((rec) => {
+            const item = document.createElement("div");
+            item.className = "weight-item";
+
+            const left = document.createElement("span");
+            left.textContent = rec.date;
+
+            const right = document.createElement("span");
+            right.textContent = rec.weight.toFixed(1) + " kg";
+
+            item.appendChild(left);
+            item.appendChild(right);
+            weightListEl.appendChild(item);
+        });
+    }
+
+    function renderWeightChart() {
+        const monthStr = weightMonthInput.value || getTodayMonthStr();
+        weightMonthInput.value = monthStr;
+
+        if (!monthStr) return;
+
+        const [yearStr, monthStrNum] = monthStr.split("-");
+        const year = parseInt(yearStr, 10);
+        const monthIndex = parseInt(monthStrNum, 10) - 1;
+
+        const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+
+        // 先为每一天准备空位
+        const labels = [];
+        const dataMap = {}; // day -> last weight in that day
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            labels.push(d.toString());
+        }
+
+        // 取该月记录
+        weightRecords.forEach((rec) => {
+            const d = new Date(rec.date);
+            if (d.getFullYear() === year && d.getMonth() === monthIndex) {
+                const day = d.getDate();
+                // 后写入的覆盖前写入的，保证“最后一次记录”为准
+                dataMap[day] = rec.weight;
+            }
+        });
+
+        const data = labels.map((label) => {
+            const day = parseInt(label, 10);
+            return dataMap[day] !== undefined ? dataMap[day] : null;
+        });
+
+        // 如果之前有图表实例，先销毁
+        if (weightChartInstance) {
+            weightChartInstance.destroy();
+        }
+
+        const ctx = weightChartCanvas.getContext("2d");
+        weightChartInstance = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "体重（kg）",
+                        data: data,
+                        spanGaps: true,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: "日期"
+                        },
+                        ticks: {
+                            maxTicksLimit: 10
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: "体重（kg）"
+                        },
+                        beginAtZero: false
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    weightAddBtn.addEventListener("click", addWeightRecord);
+    weightValueInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") addWeightRecord();
+    });
+    weightMonthInput.addEventListener("change", renderWeightChart);
+
+    /* 事件 & 初始化 */
+    (function init() {
+        const today = getTodayStr();
+        p50DateInput.value = today;
+        todoDateInput.value = today;
+        weightDateInput.value = today;
+        weightMonthInput.value = getTodayMonthStr();
+
+        p50CalMonth = new Date();
+        p50CalMonth.setDate(1);
+        focusCalMonth = new Date();
+        focusCalMonth.setDate(1);
+
+        loadP50Data();
+        loadTodoTasks();
+        loadWeightRecords();
+
+        renderP50();
+        renderTodoList();
+        renderFocusCalendar();
+        renderWeightList();
+        renderWeightChart();
+    })();
+</script>
+</body>
+</html>
